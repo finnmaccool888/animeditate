@@ -13,6 +13,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { theme } from '../theme/theme';
 import { MainAppStackParamList } from '../navigation/MainAppStack';
+import { useDailyFlow } from '../context/DailyFlowContext';
 import MoodIcon from '../components/MoodIcon';
 import PrimaryButton from '../components/PrimaryButton';
 
@@ -31,10 +32,12 @@ const MOODS = [
 
 export default function CheckInScreen() {
   const navigation = useNavigation<CheckInScreenNavigationProp>();
+  const { markCheckedIn } = useDailyFlow();
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [thoughts, setThoughts] = useState('');
 
   const handleStartEpisode = () => {
+    markCheckedIn();
     navigation.navigate('ReflectionChatScreen');
   };
 

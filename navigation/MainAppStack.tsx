@@ -46,9 +46,27 @@ export default function MainAppStack() {
       }}
     >
       <Stack.Screen name="MainTabs" component={MainTabs} />
-      <Stack.Screen name="CheckInScreen" component={CheckInScreen} />
-      <Stack.Screen name="ReflectionChatScreen" component={ReflectionChatScreen} />
-      <Stack.Screen name="ZenQuestScreen" component={ZenQuestScreen} />
+      <Stack.Screen
+        name="CheckInScreen"
+        component={CheckInScreen}
+        options={{
+          gestureEnabled: false,
+        }}
+      />
+      <Stack.Screen
+        name="ReflectionChatScreen"
+        component={ReflectionChatScreen}
+        options={{
+          gestureEnabled: false,
+        }}
+      />
+      <Stack.Screen
+        name="ZenQuestScreen"
+        component={ZenQuestScreen}
+        options={{
+          gestureEnabled: false,
+        }}
+      />
     </Stack.Navigator>
   );
 }

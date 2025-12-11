@@ -14,7 +14,9 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { theme } from '../theme/theme';
 import { MainAppStackParamList } from '../navigation/MainAppStack';
+import { useDailyFlow } from '../context/DailyFlowContext';
 import ChatBubble from '../components/ChatBubble';
+import PrimaryButton from '../components/PrimaryButton';
 
 type ReflectionChatScreenNavigationProp = NativeStackNavigationProp<MainAppStackParamList>;
 
@@ -46,6 +48,7 @@ const CANNED_EVA_RESPONSES = [
 
 export default function ReflectionChatScreen() {
   const navigation = useNavigation<ReflectionChatScreenNavigationProp>();
+  const { markReflected } = useDailyFlow();
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
   const [inputText, setInputText] = useState('');
   const flatListRef = useRef<FlatList>(null);
@@ -77,6 +80,7 @@ export default function ReflectionChatScreen() {
   };
 
   const handleContinue = () => {
+    markReflected();
     navigation.navigate('ZenQuestScreen');
   };
 
@@ -130,14 +134,11 @@ export default function ReflectionChatScreen() {
                 <Text style={styles.sendButtonText}>Send</Text>
               </TouchableOpacity>
             </View>
-            <TouchableOpacity
-              style={styles.continueButton}
+            <PrimaryButton
+              label="Continue to Zen Quest"
               onPress={handleContinue}
-            >
-              <Text style={styles.continueButtonText}>
-                Continue to Zen Quest
-              </Text>
-            </TouchableOpacity>
+              style={styles.continueButton}
+            />
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -228,13 +229,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   continueButton: {
-    alignItems: 'center',
-    paddingVertical: theme.spacing.md,
-    marginTop: theme.spacing.sm,
-  },
-  continueButtonText: {
-    color: theme.colors.lavender,
-    fontSize: theme.fontSizes.small,
-    fontWeight: '600',
+    marginTop: theme.spacing.md,
   },
 });
