@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,11 @@ import { useDailyFlow } from '../context/DailyFlowContext';
 import { MainAppStackParamList } from '../navigation/MainAppStack';
 import ZenSigil from '../components/ZenSigil';
 import PrimaryButton from '../components/PrimaryButton';
+import {
+  generateZenQuestMeditation,
+  parseMeditationLines,
+  MeditationParams,
+} from '../services/evaPlaceholder';
 
 type ZenQuestScreenNavigationProp = NativeStackNavigationProp<MainAppStackParamList>;
 
@@ -21,6 +26,27 @@ export default function ZenQuestScreen() {
   const navigation = useNavigation<ZenQuestScreenNavigationProp>();
   const { arcTitle, boss, finalForm } = useOnboarding();
   const { markCompletedZenQuest } = useDailyFlow();
+
+  // Build meditation params from onboarding values
+  // TODO: Get mood from CheckInScreen when persistence is added
+  const meditationParams: MeditationParams = useMemo(() => ({
+    arcTitle: arcTitle || 'Your Journey',
+    boss: boss || 'your challenge',
+    finalForm: finalForm || 'your true self',
+    mood: 'steady', // Placeholder until mood storage is implemented
+  }), [arcTitle, boss, finalForm]);
+
+  // Generate personalized meditation using placeholder AI
+  const meditationScript = useMemo(
+    () => generateZenQuestMeditation(meditationParams),
+    [meditationParams]
+  );
+
+  // Parse into lines for display
+  const meditationLines = useMemo(
+    () => parseMeditationLines(meditationScript),
+    [meditationScript]
+  );
 
   const handleComplete = () => {
     markCompletedZenQuest();
@@ -50,20 +76,24 @@ export default function ZenQuestScreen() {
           </View>
 
           <View style={styles.meditationSection}>
-            <Text style={styles.meditationText}>Close your eyes.</Text>
-            <Text style={styles.meditationText}>Inhale slowly for 4 counts.</Text>
-            <Text style={styles.meditationText}>Hold for 2 counts.</Text>
-            <Text style={styles.meditationText}>Exhale for 6 counts.</Text>
-            <View style={styles.meditationSpacer} />
-            <Text style={styles.meditationTextHighlight}>
-              Remember your arc: {arcTitle || 'Your Journey'}.
-            </Text>
-            <Text style={styles.meditationText}>
-              Today, release 1% of the weight from {boss || 'your current challenge'}.
-            </Text>
-            <Text style={styles.meditationText}>
-              Move one small step toward {finalForm || 'your final form'}.
-            </Text>
+            {meditationLines.map((line, index) => {
+              // Check if line contains arc title (highlight it)
+              const isHighlight = line.includes(arcTitle) ||
+                                  line.toLowerCase().includes('your arc') ||
+                                  line.toLowerCase().includes('remember');
+
+              return (
+                <Text
+                  key={index}
+                  style={[
+                    styles.meditationText,
+                    isHighlight && styles.meditationTextHighlight,
+                  ]}
+                >
+                  {line}
+                </Text>
+              );
+            })}
           </View>
 
           <View style={styles.ctaSection}>
@@ -151,19 +181,12 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSizes.body,
     color: `${theme.colors.softWhite}85`,
     textAlign: 'center',
-    lineHeight: 28,
+    lineHeight: 32,
     marginBottom: theme.spacing.xs,
   },
   meditationTextHighlight: {
-    fontSize: theme.fontSizes.body,
     color: theme.colors.lavender,
-    textAlign: 'center',
-    lineHeight: 28,
-    marginBottom: theme.spacing.xs,
     fontWeight: '500',
-  },
-  meditationSpacer: {
-    height: theme.spacing.lg,
   },
   ctaSection: {
     alignItems: 'center',

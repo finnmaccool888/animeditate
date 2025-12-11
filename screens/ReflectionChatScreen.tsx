@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,8 +15,14 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { theme } from '../theme/theme';
 import { MainAppStackParamList } from '../navigation/MainAppStack';
 import { useDailyFlow } from '../context/DailyFlowContext';
+import { useOnboarding } from '../context/OnboardingContext';
 import ChatBubble from '../components/ChatBubble';
 import PrimaryButton from '../components/PrimaryButton';
+import {
+  generateEvaReflectionResponse,
+  generateInitialReflectionMessages,
+  ReflectionContext,
+} from '../services/evaPlaceholder';
 
 type ReflectionChatScreenNavigationProp = NativeStackNavigationProp<MainAppStackParamList>;
 
@@ -24,64 +30,102 @@ interface Message {
   id: string;
   role: 'eva' | 'user';
   text: string;
+  isTyping?: boolean;
 }
-
-const INITIAL_MESSAGES: Message[] = [
-  {
-    id: '1',
-    role: 'eva',
-    text: 'I saw how you checked in. Thank you for being honest.',
-  },
-  {
-    id: '2',
-    role: 'eva',
-    text: "What's one thing that's been weighing on you lately?",
-  },
-];
-
-const CANNED_EVA_RESPONSES = [
-  "That sounds heavy. What part of that feels most intense?",
-  "I hear you. Sometimes just naming it helps. What else is there?",
-  "You're doing well by sharing this. How does it feel to say it out loud?",
-  "That makes sense. What would feel like a small step forward?",
-];
 
 export default function ReflectionChatScreen() {
   const navigation = useNavigation<ReflectionChatScreenNavigationProp>();
   const { markReflected } = useDailyFlow();
-  const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
+  const { arcTitle, boss, finalForm } = useOnboarding();
+
+  // Build reflection context from onboarding values
+  // TODO: Get mood from CheckInScreen when persistence is added
+  const reflectionContext: ReflectionContext = {
+    arcTitle: arcTitle || 'Your Journey',
+    boss: boss || 'your challenge',
+    finalForm: finalForm || 'your true self',
+    mood: 'present', // Placeholder until mood storage is implemented
+  };
+
+  // Generate initial messages using placeholder AI
+  const initialMessages = generateInitialReflectionMessages(reflectionContext).map(
+    (msg, index) => ({
+      id: `initial-${index}`,
+      role: msg.role,
+      text: msg.text,
+    })
+  );
+
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [inputText, setInputText] = useState('');
+  const [isEvaTyping, setIsEvaTyping] = useState(false);
   const flatListRef = useRef<FlatList>(null);
-  const responseIndexRef = useRef(0);
+
+  // Auto-scroll when messages change
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [messages]);
 
   const handleSend = () => {
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || isEvaTyping) return;
 
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: `user-${Date.now()}`,
       role: 'user',
       text: inputText.trim(),
     };
 
-    const evaResponse: Message = {
-      id: (Date.now() + 1).toString(),
-      role: 'eva',
-      text: CANNED_EVA_RESPONSES[responseIndexRef.current % CANNED_EVA_RESPONSES.length],
-    };
-
-    responseIndexRef.current += 1;
-
-    setMessages((prev) => [...prev, userMessage, evaResponse]);
+    // Add user message
+    setMessages((prev) => [...prev, userMessage]);
+    const sentText = inputText.trim();
     setInputText('');
 
+    // Show Eva typing indicator
+    setIsEvaTyping(true);
+    const typingMessage: Message = {
+      id: 'typing',
+      role: 'eva',
+      text: '',
+      isTyping: true,
+    };
+    setMessages((prev) => [...prev, typingMessage]);
+
+    // Simulate Eva thinking delay (600-900ms)
+    const thinkingDelay = 600 + Math.floor(sentText.length * 3);
+    const clampedDelay = Math.min(thinkingDelay, 1200);
+
     setTimeout(() => {
-      flatListRef.current?.scrollToEnd({ animated: true });
-    }, 100);
+      // Generate Eva's response using placeholder AI
+      const evaResponse = generateEvaReflectionResponse(sentText, reflectionContext);
+
+      const evaMessage: Message = {
+        id: `eva-${Date.now()}`,
+        role: 'eva',
+        text: evaResponse.text,
+      };
+
+      // Replace typing indicator with actual response
+      setMessages((prev) => {
+        const withoutTyping = prev.filter((msg) => msg.id !== 'typing');
+        return [...withoutTyping, evaMessage];
+      });
+      setIsEvaTyping(false);
+    }, clampedDelay);
   };
 
   const handleContinue = () => {
     markReflected();
     navigation.navigate('ZenQuestScreen');
+  };
+
+  const renderMessage = ({ item }: { item: Message }) => {
+    if (item.isTyping) {
+      return <ChatBubble message="" sender="eva" isTyping />;
+    }
+    return <ChatBubble message={item.text} sender={item.role} />;
   };
 
   return (
@@ -104,9 +148,7 @@ export default function ReflectionChatScreen() {
             ref={flatListRef}
             data={messages}
             keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <ChatBubble message={item.text} sender={item.role} />
-            )}
+            renderItem={renderMessage}
             contentContainerStyle={styles.chatContent}
             showsVerticalScrollIndicator={false}
             onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
@@ -122,14 +164,15 @@ export default function ReflectionChatScreen() {
                 onChangeText={setInputText}
                 multiline
                 maxLength={500}
+                editable={!isEvaTyping}
               />
               <TouchableOpacity
                 style={[
                   styles.sendButton,
-                  !inputText.trim() && styles.sendButtonDisabled,
+                  (!inputText.trim() || isEvaTyping) && styles.sendButtonDisabled,
                 ]}
                 onPress={handleSend}
-                disabled={!inputText.trim()}
+                disabled={!inputText.trim() || isEvaTyping}
               >
                 <Text style={styles.sendButtonText}>Send</Text>
               </TouchableOpacity>
