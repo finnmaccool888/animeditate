@@ -4,9 +4,9 @@ import OnboardingStack from './OnboardingStack';
 import MainAppStack from './MainAppStack';
 
 export default function RootNavigator() {
-  // For now, hardcode onboarding as complete to show MainAppStack
+  // For now, hardcode onboarding as incomplete to show OnboardingStack
   // In future, this will check actual onboarding state from context/storage
-  const [onboardingComplete] = useState(true);
+  const [onboardingComplete] = useState(false);
 
   return (
     <NavigationContainer>

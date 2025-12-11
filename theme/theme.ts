@@ -14,6 +14,12 @@ export const theme = {
     xxl: 48,
   },
   radius: 16,
+  fontSizes: {
+    title: 36,
+    subtitle: 20,
+    body: 16,
+    small: 14,
+  },
 } as const;
 
 export type Theme = typeof theme;
