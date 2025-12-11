@@ -10,6 +10,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { theme } from '../theme/theme';
 import { useOnboarding } from '../context/OnboardingContext';
+import { useDailyFlow } from '../context/DailyFlowContext';
 import { MainAppStackParamList } from '../navigation/MainAppStack';
 import ZenSigil from '../components/ZenSigil';
 import PrimaryButton from '../components/PrimaryButton';
@@ -19,8 +20,10 @@ type ZenQuestScreenNavigationProp = NativeStackNavigationProp<MainAppStackParamL
 export default function ZenQuestScreen() {
   const navigation = useNavigation<ZenQuestScreenNavigationProp>();
   const { arcTitle, boss, finalForm } = useOnboarding();
+  const { markCompletedZenQuest } = useDailyFlow();
 
   const handleComplete = () => {
+    markCompletedZenQuest();
     navigation.navigate('MainTabs');
   };
 

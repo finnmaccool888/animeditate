@@ -10,6 +10,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { theme } from '../theme/theme';
 import { useOnboarding } from '../context/OnboardingContext';
+import { useDailyFlow } from '../context/DailyFlowContext';
 import HomeCard from '../components/HomeCard';
 import { MainAppStackParamList } from '../navigation/MainAppStack';
 
@@ -18,6 +19,26 @@ type HomeScreenNavigationProp = NativeStackNavigationProp<MainAppStackParamList>
 export default function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const { arcTitle, boss } = useOnboarding();
+  const { hasCheckedIn, hasReflected, hasCompletedZenQuest } = useDailyFlow();
+
+  // Card 1: Check-In - always accessible, shows completed if done
+  const checkInStatus = hasCheckedIn ? 'completed' : 'active';
+
+  // Card 2: Reflect With Eva - locked until check-in is done
+  const reflectStatus = !hasCheckedIn
+    ? 'locked'
+    : hasReflected
+    ? 'completed'
+    : 'active';
+  const reflectDisabled = !hasCheckedIn;
+
+  // Card 3: Zen Quest - locked until reflection is done
+  const zenQuestStatus = !hasReflected
+    ? 'locked'
+    : hasCompletedZenQuest
+    ? 'completed'
+    : 'active';
+  const zenQuestDisabled = !hasReflected;
 
   return (
     <View style={styles.backgroundContainer}>
@@ -38,21 +59,23 @@ export default function HomeScreen() {
             <HomeCard
               title="Check-In"
               description="Acknowledge the start of today's episode."
-              status="active"
+              status={checkInStatus}
               onPress={() => navigation.navigate('CheckInScreen')}
             />
 
             <HomeCard
               title="Reflect With Eva"
               description="Talk to Eva about what's happening internally."
-              status="locked"
+              status={reflectStatus}
+              disabled={reflectDisabled}
               onPress={() => navigation.navigate('ReflectionChatScreen')}
             />
 
             <HomeCard
               title="Zen Quest"
               description="Your daily meditation quest to strengthen your Final Form."
-              status="locked"
+              status={zenQuestStatus}
+              disabled={zenQuestDisabled}
               onPress={() => navigation.navigate('ZenQuestScreen')}
             />
           </View>
