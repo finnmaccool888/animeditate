@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-export default function RitualScreen() {
+export default function ZenQuestScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>RitualScreen</Text>
+      <Text style={styles.text}>ZenQuestScreen</Text>
     </View>
   );
 }

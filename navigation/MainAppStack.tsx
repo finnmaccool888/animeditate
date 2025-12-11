@@ -1,8 +1,12 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomeScreen from '../screens/HomeScreen';
 import SagaScreen from '../screens/SagaScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import CheckInScreen from '../screens/CheckInScreen';
+import ReflectionChatScreen from '../screens/ReflectionChatScreen';
+import ZenQuestScreen from '../screens/ZenQuestScreen';
 
 export type MainAppTabParamList = {
   Home: undefined;
@@ -10,9 +14,17 @@ export type MainAppTabParamList = {
   Settings: undefined;
 };
 
-const Tab = createBottomTabNavigator<MainAppTabParamList>();
+export type MainAppStackParamList = {
+  MainTabs: undefined;
+  CheckInScreen: undefined;
+  ReflectionChatScreen: undefined;
+  ZenQuestScreen: undefined;
+};
 
-export default function MainAppStack() {
+const Tab = createBottomTabNavigator<MainAppTabParamList>();
+const Stack = createNativeStackNavigator<MainAppStackParamList>();
+
+function MainTabs() {
   return (
     <Tab.Navigator
       screenOptions={{
@@ -23,5 +35,20 @@ export default function MainAppStack() {
       <Tab.Screen name="Saga" component={SagaScreen} />
       <Tab.Screen name="Settings" component={SettingsScreen} />
     </Tab.Navigator>
+  );
+}
+
+export default function MainAppStack() {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <Stack.Screen name="MainTabs" component={MainTabs} />
+      <Stack.Screen name="CheckInScreen" component={CheckInScreen} />
+      <Stack.Screen name="ReflectionChatScreen" component={ReflectionChatScreen} />
+      <Stack.Screen name="ZenQuestScreen" component={ZenQuestScreen} />
+    </Stack.Navigator>
   );
 }
